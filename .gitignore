@@ -1,0 +1,11 @@
+# Node modules
+node_modules/
+
+# Firebase config
+js/firebase-config.js
+
+# Environment variables
+.env
+
+# VSCode settings
+.vscode/
