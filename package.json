@@ -1,6 +1,19 @@
 {
+  "name": "gestion-citas-peluqueria",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de citas para peluquería/barbería",
+  "main": "index.js",
+  "scripts": {
+    "start": "live-server --port=3000 --open=/index.html",
+    "dev": "live-server --port=3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
     "dotenv": "^16.5.0",
     "firebase": "^11.7.3"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
   }
+  
 }

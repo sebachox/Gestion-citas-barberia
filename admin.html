@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Barbería XYZ</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="loginSection">
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="adminEmail">Email:</label>
+                    <input type="email" id="adminEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">Contraseña:</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                
+                <button type="submit">Ingresar</button>
+            </form>
+        </div>
+        
+        <div id="adminPanel" style="display: none;">
+            <header>
+                <h1>Panel de Administración</h1>
+                <button id="logoutBtn">Cerrar Sesión</button>
+            </header>
+            
+            <nav>
+                <ul>
+                    <li><a href="#" class="tab-link" data-tab="citas">Citas</a></li>
+                    <li><a href="#" class="tab-link" data-tab="barberos">Barberos</a></li>
+                    <li><a href="#" class="tab-link" data-tab="servicios">Servicios</a></li>
+                </ul>
+            </nav>
+            
+            <main>
+                <!-- Pestaña de Citas -->
+                <div id="citasTab" class="tab-content active">
+                    <h2>Citas Programadas</h2>
+                    <div class="filters">
+                        <label for="fechaFiltro">Filtrar por fecha:</label>
+                        <input type="date" id="fechaFiltro">
+                        <button id="filtrarCitas">Filtrar</button>
+                    </div>
+                    <table id="citasTable">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Teléfono</th>
+                                <th>Barbero</th>
+                                <th>Servicio</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Citas se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pestaña de Barberos -->
+                <div id="barberosTab" class="tab-content">
+                    <h2>Barberos</h2>
+                    <button id="agregarBarberoBtn">Agregar Barbero</button>
+                    <table id="barberosTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Especialidad</th>
+                                <th>Horario</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Barberos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pestaña de Servicios -->
+                <div id="serviciosTab" class="tab-content">
+                    <h2>Servicios</h2>
+                    <button id="agregarServicioBtn">Agregar Servicio</button>
+                    <table id="serviciosTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Precio</th>
+                                <th>Duración</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Servicios se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar/editar barbero -->
+    <div id="barberoModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalBarberoTitulo">Agregar Barbero</h2>
+            <form id="barberoForm">
+                <input type="hidden" id="barberoId">
+                <div class="form-group">
+                    <label for="barberoNombre">Nombre:</label>
+                    <input type="text" id="barberoNombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="barberoEspecialidad">Especialidad:</label>
+                    <input type="text" id="barberoEspecialidad">
+                </div>
+                <div class="form-group">
+                    <label for="barberoHorario">Horario:</label>
+                    <input type="text" id="barberoHorario" placeholder="Ej: L-V 9am-6pm">
+                </div>
+                <button type="submit">Guardar</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar/editar servicio -->
+    <div id="servicioModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalServicioTitulo">Agregar Servicio</h2>
+            <form id="servicioForm">
+                <input type="hidden" id="servicioId">
+                <div class="form-group">
+                    <label for="servicioNombre">Nombre:</label>
+                    <input type="text" id="servicioNombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="servicioDescripcion">Descripción:</label>
+                    <textarea id="servicioDescripcion"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="servicioPrecio">Precio:</label>
+                    <input type="number" id="servicioPrecio" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="servicioDuracion">Duración (minutos):</label>
+                    <input type="number" id="servicioDuracion" required>
+                </div>
+                <button type="submit">Guardar</button>
+            </form>
+        </div>
+    </div>
+    
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
