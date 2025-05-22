@@ -188,3 +188,217 @@ nav ul li {
         border-bottom: 1px solid #ddd;
     }
 }
+
+.horarios-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.hora-btn {
+    padding: 8px 12px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* Estilos específicos para los botones de horario */
+.hora-btn {
+    padding: 8px 12px;
+    background-color: #35424a; /* Color oscuro para coincidir con tu tema */
+    color: white; /* Texto blanco */
+    border: 1px solid #2d383f;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+    margin: 3px;
+}
+
+.hora-btn:hover {
+    background-color: #e8491d; /* Color de hover que usas en otros botones */
+    color: white;
+}
+
+.hora-btn.seleccionado {
+    background-color: #4CAF50; /* Verde para horarios seleccionados */
+    color: white;
+    border-color: #3d8b40;
+}
+
+/* Contenedor de horarios */
+.horarios-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Estilos para los tags de horarios seleccionados */
+.horarios-seleccionados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.horario-tag {
+    background-color: #35424a;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.horario-tag button {
+    background: none;
+    border: none;
+    color: white;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+}
+
+.horario-tag button:hover {
+    color: #e8491d;
+}
+
+/* Estilos para el mensaje de estado */
+#mensaje {
+    padding: 12px;
+    margin: 20px 0;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 500;
+    display: none;
+    border: 1px solid transparent;
+}
+
+#mensaje.success {
+    background-color: #e6ffed;
+    color: #2d8041;
+    border-color: #b2f2bb;
+    display: block;
+}
+
+#mensaje.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-color: #ffcdd2;
+    display: block;
+}
+
+/* Estilos para selects deshabilitados */
+select:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* Estilos para el estado de carga */
+.loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: "Cargando...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #495057;
+    font-size: 0.9em;
+}
+
+/* Mejoras para los selects */
+select {
+    transition: all 0.3s ease;
+}
+
+select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Estilos para el botón de submit */
+#submitBtn {
+    transition: all 0.3s ease;
+}
+
+#submitBtn:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Estilos responsivos */
+@media (max-width: 576px) {
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    select, input {
+        padding: 0.5rem;
+    }
+}
+
+
+/* Estados de la tabla  */
+.estado {
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.fila-pendiente {
+  background-color: #f5f5f5;
+}
+.fila-confirmada {
+  background-color: #fff8e1; /* amarillo claro */
+}
+.fila-completada {
+  background-color: #e8f5e9; /* verde claro */
+}
+.fila-cancelada {
+  background-color: #ffebee; /* rojo claro */
+}
+
+
+.acciones-cita {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.btn-estado {
+  padding: 10px;
+  font-size: 0.9em;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-confirmar {
+  background-color: #ff9800;
+}
+.btn-completar {
+  background-color: #4CAF50;
+}
+.btn-cancelar {
+  background-color: #f44336;
+}
+
