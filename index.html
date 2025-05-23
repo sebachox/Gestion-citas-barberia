@@ -1,12 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva tu Cita - Barbería XYZ</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reserva tu Cita - Barbería XYZ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #0f0f0f, #1a1a1a);
+      color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background-color: #222;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    header h1 {
+      text-align: center;
+      font-weight: 700;
+      color: #FFD700;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #ccc;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background-color: #333;
+      color: #fff;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      background-color: #444;
+      box-shadow: 0 0 5px #FFD700;
+    }
+
+    button#submitBtn {
+      width: 100%;
+      padding: 14px;
+      background-color: #FFD700;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #000;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button#submitBtn:hover {
+      background-color: #e6c200;
+    }
+
+    #mensaje {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+  </style>
 </head>
 <body>
+<<<<<<< Updated upstream
     <div class="container">
         <header>
             <h1>Reserva tu cita</h1>
@@ -59,5 +142,78 @@
     
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/main.js"></script>
+=======
+  <div class="container">
+    <header>
+      <h1>Reserva tu cita</h1>
+    </header>
+
+    <main>
+      <form id="reservaForm">
+        <div class="form-group">
+          <label for="nombre">Nombre completo:</label>
+          <input type="text" id="nombre" required />
+        </div>
+
+        <div class="form-group">
+          <label for="cedula">Cédula:</label>
+          <input type="text" id="cedula" required />
+        </div>
+
+        <div class="form-group">
+          <label for="telefono">Teléfono:</label>
+          <input type="tel" id="telefono" required />
+        </div>
+
+        <div class="form-group">
+          <label for="barbero">Barbero:</label>
+          <select id="barbero" required>
+            <option value="">Selecciona un barbero</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="servicio">Servicio:</label>
+          <select id="servicio" required>
+            <option value="">Selecciona un servicio</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="fecha">Fecha:</label>
+          <input type="date" id="fecha" required />
+        </div>
+
+        <div class="form-group">
+          <label for="hora">Hora:</label>
+          <select id="hora" required disabled>
+            <option value="">Primero selecciona barbero y fecha</option>
+          </select>
+        </div>
+
+        <button type="submit" id="submitBtn">Reservar Cita</button>
+      </form>
+
+      <div id="mensaje"></div>
+    </main>
+  </div>
+
+  <script>
+    // Establecer fecha mínima para el campo de fecha (mañana)
+    const fechaInput = document.getElementById('fecha');
+    const hoy = new Date();
+    hoy.setDate(hoy.getDate() + 1); // Sumar un día
+
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    const minFecha = `${yyyy}-${mm}-${dd}`;
+
+    fechaInput.min = minFecha;
+  </script>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/main.js"></script>
+>>>>>>> Stashed changes
 </body>
 </html>
