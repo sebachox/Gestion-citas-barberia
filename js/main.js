@@ -1,123 +1,32 @@
-// import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
-// async function testFirebaseConnection() {
-//   try {
-//     console.log("Intentando conectar con Firestore...");
-//     const querySnapshot = await getDocs(collection(db, "testConnection"));
-//     console.log("✅ Conexión exitosa con Firestore");
-//     return true;
-//   } catch (error) {
-//     console.error("❌ Error de conexión con Firestore:", error);
-//     console.log("Código de error:", error.code);
-//     console.log("Mensaje:", error.message);
-//     return false;
-//   }
-// }
-
-// // Ejecuta la prueba
-// testFirebaseConnection();
-
-// import { auth, db } from './firebase-config.js';
-// import { collection, addDoc, getDocs, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
-// document.addEventListener('DOMContentLoaded', async () => {
-//     // Cargar barberos y servicios desde Firebase
-//     await cargarBarberos();
-//     await cargarServicios();
-    
-//     // Configurar fecha mínima (hoy)
-//     const fechaInput = document.getElementById('fecha');
-//     const hoy = new Date().toISOString().split('T')[0];
-//     fechaInput.min = hoy;
-    
-//     // Manejar envío del formulario
-//     const reservaForm = document.getElementById('reservaForm');
-//     reservaForm.addEventListener('submit', async (e) => {
-//         e.preventDefault();
-        
-//         const nombre = document.getElementById('nombre').value;
-//         const telefono = document.getElementById('telefono').value;
-//         const barberoId = document.getElementById('barbero').value;
-//         const servicioId = document.getElementById('servicio').value;
-//         const fecha = document.getElementById('fecha').value;
-//         const hora = document.getElementById('hora').value;
-        
-//         try {
-//             // Verificar disponibilidad
-//             const disponible = await verificarDisponibilidad(barberoId, fecha, hora);
-            
-//             if (!disponible) {
-//                 document.getElementById('mensaje').textContent = "El barbero no está disponible en ese horario.";
-//                 return;
-//             }
-            
-//             // Crear reserva
-//             await addDoc(collection(db, "citas"), {
-//                 nombre,
-//                 telefono,
-//                 barberoId,
-//                 servicioId,
-//                 fecha,
-//                 hora,
-//                 estado: "pendiente",
-//                 fechaCreacion: new Date()
-//             });
-            
-//             document.getElementById('mensaje').textContent = "¡Cita reservada con éxito!";
-//             reservaForm.reset();
-//         } catch (error) {
-//             console.error("Error al reservar cita:", error);
-//             document.getElementById('mensaje').textContent = "Error al reservar la cita. Por favor, inténtalo de nuevo.";
-//         }
-//     });
-// });
-
-// async function cargarBarberos() {
-//     const barberosSelect = document.getElementById('barbero');
-//     const querySnapshot = await getDocs(collection(db, "barberos"));
-    
-//     querySnapshot.forEach((doc) => {
-//         const option = document.createElement('option');
-//         option.value = doc.id;
-//         option.textContent = doc.data().nombre;
-//         barberosSelect.appendChild(option);
-//     });
-// }
-
-// async function cargarServicios() {
-//     const serviciosSelect = document.getElementById('servicio');
-//     const querySnapshot = await getDocs(collection(db, "servicios"));
-    
-//     querySnapshot.forEach((doc) => {
-//         const option = document.createElement('option');
-//         option.value = doc.id;
-//         option.textContent = `${doc.data().nombre} - $${doc.data().precio}`;
-//         serviciosSelect.appendChild(option);
-//     });
-// }
-
-// async function verificarDisponibilidad(barberoId, fecha, hora) {
-//     const q = query(
-//         collection(db, "citas"),
-//         where("barberoId", "==", barberoId),
-//         where("fecha", "==", fecha),
-//         where("hora", "==", hora)
-//     );
-    
-//     const querySnapshot = await getDocs(q);
-//     return querySnapshot.empty;
-// }
-
-
 import { db } from './firebase-config.js';
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  query, 
+  where, 
+  getDoc,
+  doc,
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-// Función para cargar barberos
+// Función para formatear la hora
+function formatearHora(hora) {
+  const [horas, minutos] = hora.split(':');
+  const horasNum = parseInt(horas);
+  const periodo = horasNum >= 12 ? 'PM' : 'AM';
+  const horas12 = horasNum % 12 || 12;
+  return `${horas12}:${minutos} ${periodo}`;
+}
+
+// Función para cargar barberos (sin cambios)
 async function cargarBarberos() {
   try {
     console.log("Cargando barberos...");
-    const querySnapshot = await getDocs(collection(db, "barberos"));
     const barberoSelect = document.getElementById('barbero');
+    barberoSelect.innerHTML = '<option value="">Selecciona un barbero</option>';
+    
+    const querySnapshot = await getDocs(collection(db, "barberos"));
     
     querySnapshot.forEach((doc) => {
       const option = document.createElement('option');
@@ -130,15 +39,18 @@ async function cargarBarberos() {
   } catch (error) {
     console.error("Error al cargar barberos:", error);
     document.getElementById('mensaje').textContent = "Error al cargar la lista de barberos";
+    document.getElementById('mensaje').className = "error";
   }
 }
 
-// Función para cargar servicios
+// Función para cargar servicios (sin cambios)
 async function cargarServicios() {
   try {
     console.log("Cargando servicios...");
     const querySnapshot = await getDocs(collection(db, "servicios"));
     const servicioSelect = document.getElementById('servicio');
+    
+    servicioSelect.innerHTML = '<option value="">Selecciona un servicio</option>';
     
     querySnapshot.forEach((doc) => {
       const option = document.createElement('option');
@@ -151,16 +63,173 @@ async function cargarServicios() {
   } catch (error) {
     console.error("Error al cargar servicios:", error);
     document.getElementById('mensaje').textContent = "Error al cargar la lista de servicios";
+    document.getElementById('mensaje').className = "error";
+  }
+}
+
+// Función mejorada para cargar horarios disponibles
+async function cargarHorariosDisponibles(barberoId, fecha) {
+  const horaSelect = document.getElementById('hora');
+  
+  try {
+    horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+    horaSelect.disabled = true;
+    
+    if (!barberoId || !fecha) {
+      horaSelect.innerHTML = '<option value="">Selecciona barbero y fecha</option>';
+      return;
+    }
+    
+    // 1. Obtener horarios del barbero
+    const barberoDoc = await getDoc(doc(db, "barberos", barberoId));
+    if (!barberoDoc.exists()) {
+      horaSelect.innerHTML = '<option value="">Barbero no encontrado</option>';
+      return;
+    }
+    
+    const horariosBarbero = barberoDoc.data().horario || [];
+    console.log("Horarios del barbero:", horariosBarbero);
+    
+    // 2. Obtener citas existentes
+    const q = query(
+      collection(db, "citas"),
+      where("barberoId", "==", barberoId),
+      where("fecha", "==", fecha)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const horasOcupadas = querySnapshot.docs
+      .filter(doc => {
+        const estado = doc.data().estado;
+        return estado === "confirmada" || estado === "completada";
+      })
+      .map(doc => doc.data().hora);
+    console.log("Horas ocupadas:", horasOcupadas);
+    
+    // 3. Filtrar horas disponibles
+    const horasDisponibles = horariosBarbero.filter(hora => !horasOcupadas.includes(hora));
+    horasDisponibles.sort((a, b) => a.localeCompare(b));
+    console.log("Horas disponibles:", horasDisponibles);
+    
+    // 4. Actualizar el select
+    horaSelect.innerHTML = horasDisponibles.length > 0 
+      ? '<option value="">Selecciona una hora</option>'
+      : '<option value="">No hay horarios disponibles</option>';
+    
+    horasDisponibles.forEach(hora => {
+      const option = document.createElement('option');
+      option.value = hora;
+      option.textContent = formatearHora(hora);
+      horaSelect.appendChild(option);
+    });
+    
+    horaSelect.disabled = horasDisponibles.length === 0;
+    
+  } catch (error) {
+    console.error("Error al cargar horarios:", error);
+    horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
+    document.getElementById('mensaje').textContent = "Error al cargar horarios. Intenta nuevamente.";
+    document.getElementById('mensaje').className = "error";
+  }
+}
+
+// Función para verificar disponibilidad (sin cambios)
+async function verificarDisponibilidad(barberoId, fecha, hora) {
+  try {
+    const q = query(
+      collection(db, "citas"),
+      where("barberoId", "==", barberoId),
+      where("fecha", "==", fecha),
+      where("hora", "==", hora)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.empty;
+  } catch (error) {
+    console.error("Error al verificar disponibilidad:", error);
+    return false;
   }
 }
 
 // Al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
   console.log("DOM cargado, iniciando...");
+  
+  // Cargar datos iniciales
   cargarBarberos();
   cargarServicios();
   
   // Configurar fecha mínima (hoy)
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('fecha').min = hoy;
+  document.getElementById('fecha').value = hoy; // Establecer fecha actual por defecto
+  
+  // Event listeners mejorados
+  document.getElementById('barbero').addEventListener('change', function() {
+    const fecha = document.getElementById('fecha').value;
+    cargarHorariosDisponibles(this.value, fecha);
+  });
+  
+  document.getElementById('fecha').addEventListener('change', function() {
+    const barberoId = document.getElementById('barbero').value;
+    cargarHorariosDisponibles(barberoId, this.value);
+  });
+  
+  // Manejar envío del formulario (sin cambios)
+  const reservaForm = document.getElementById('reservaForm');
+  reservaForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('nombre').value.trim();
+    const cedula = document.getElementById('cedula').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const barberoId = document.getElementById('barbero').value;
+    const servicioId = document.getElementById('servicio').value;
+    const fecha = document.getElementById('fecha').value;
+    const hora = document.getElementById('hora').value;
+    
+    // Validaciones
+    if (!nombre || !cedula || !telefono || !barberoId || !servicioId || !fecha || !hora) {
+      document.getElementById('mensaje').textContent = "Por favor completa todos los campos.";
+      document.getElementById('mensaje').className = "error";
+      return;
+    }
+    
+    try {
+      const disponible = await verificarDisponibilidad(barberoId, fecha, hora);
+      
+      if (!disponible) {
+        document.getElementById('mensaje').textContent = "Lo sentimos, ese horario ya no está disponible. Por favor selecciona otro.";
+        document.getElementById('mensaje').className = "error";
+        await cargarHorariosDisponibles(barberoId, fecha);
+        return;
+      }
+      
+      await addDoc(collection(db, "citas"), {
+        nombre,
+        cedula,
+        telefono,
+        barberoId,
+        servicioId,
+        fecha,
+        hora,
+        estado: "pendiente",
+        fechaCreacion: serverTimestamp()
+      });
+      
+      document.getElementById('mensaje').textContent = "¡Cita reservada con éxito!";
+      document.getElementById('mensaje').className = "success";
+      reservaForm.reset();
+      
+      setTimeout(() => {
+        document.getElementById('mensaje').textContent = "";
+        document.getElementById('mensaje').className = "";
+      }, 5000);
+      
+    } catch (error) {
+      console.error("Error al reservar cita:", error);
+      document.getElementById('mensaje').textContent = "Error al reservar la cita. Por favor, inténtalo de nuevo.";
+      document.getElementById('mensaje').className = "error";
+    }
+  });
 });
