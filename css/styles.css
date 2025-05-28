@@ -402,3 +402,41 @@ select:focus {
   background-color: #f44336;
 }
 
+
+
+.barra-busqueda {
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  width: 100%;
+  max-width: 300px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.input-uniforme {
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.emergente {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+  font-size: 16px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.oculto {
+  display: none;
+}

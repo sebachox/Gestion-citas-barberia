@@ -6,6 +6,7 @@ import {
   query, 
   where, 
   getDoc,
+  updateDoc,
   doc,
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
@@ -151,6 +152,28 @@ async function verificarDisponibilidad(barberoId, fecha, hora) {
   }
 }
 
+//funcion para validar solo numeros en taelefeono y cedula
+function validarNumero(inputElement, longitudesPermitidas = []) {
+  inputElement.addEventListener('input', () => {
+    // Permitir solo números
+    inputElement.value = inputElement.value.replace(/\D/g, '');
+
+    // Si hay longitud definida, validar
+    if (longitudesPermitidas.length > 0) {
+      const longitudValida = longitudesPermitidas.includes(inputElement.value.length);
+      inputElement.setCustomValidity(
+        longitudValida || inputElement.value.length === 0 
+          ? '' 
+          : `Debe tener ${longitudesPermitidas.join(" o ")} dígitos.`
+      );
+    } else {
+      // Si no se define longitud, no poner restricciones
+      inputElement.setCustomValidity('');
+    }
+  });
+}
+
+
 // Al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
   console.log("DOM cargado, iniciando...");
@@ -158,6 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cargar datos iniciales
   cargarBarberos();
   cargarServicios();
+
+  //  validar campos numericos
+  validarNumero(document.getElementById('cedula'), [8, 10]);
+  validarNumero(document.getElementById('telefono'), [10]);
+
   
   // Configurar fecha mínima (hoy)
   const hoy = new Date().toISOString().split('T')[0];
@@ -204,7 +232,16 @@ document.addEventListener('DOMContentLoaded', () => {
         await cargarHorariosDisponibles(barberoId, fecha);
         return;
       }
-      
+
+      const cedula = document.getElementById('cedula').value.trim();
+
+      if (!/^\d{8}$|^\d{10}$/.test(cedula)) {
+        document.getElementById('mensaje').textContent = "La cédula debe tener exactamente 8 o 10 dígitos numéricos.";
+        document.getElementById('mensaje').className = "error";
+        return;
+      }
+
+      // 1. Guardar la cita
       await addDoc(collection(db, "citas"), {
         nombre,
         cedula,
@@ -216,7 +253,18 @@ document.addEventListener('DOMContentLoaded', () => {
         estado: "pendiente",
         fechaCreacion: serverTimestamp()
       });
-      
+
+      // 👇 Eliminar la hora reservada del arreglo del barbero
+      const barberoRef = doc(db, "barberos", barberoId);
+      const barberoDoc = await getDoc(barberoRef);
+
+      if (barberoDoc.exists()) {
+        const horarios = barberoDoc.data().horario || [];
+
+        const nuevosHorarios = horarios.filter(h => h !== hora);
+        await updateDoc(barberoRef, { horario: nuevosHorarios });
+      }
+
       document.getElementById('mensaje').textContent = "¡Cita reservada con éxito!";
       document.getElementById('mensaje').className = "success";
       reservaForm.reset();
