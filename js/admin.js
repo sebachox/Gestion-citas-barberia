@@ -18,22 +18,36 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
+// Controlador global de eventos para evitar duplicación
+const eventListeners = new Map();
+
+function addUniqueListener(element, event, callback) {
+    // Eliminar listener existente si hay uno
+    const key = `${event}-${element.id || element.className}`;
+    const existing = eventListeners.get(key);
+    if (existing) {
+        element.removeEventListener(event, existing);
+    }
+    
+    // Agregar nuevo listener y guardar referencia
+    element.addEventListener(event, callback);
+    eventListeners.set(key, callback);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Verificar estado de autenticación
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Usuario autenticado
             showAdminPanel();
             loadInitialData();
         } else {
-            // No autenticado
             showLoginSection();
         }
     });
     
     // Manejar inicio de sesión
     const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', async (e) => {
+    addUniqueListener(loginForm, 'submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('adminEmail').value;
         const password = document.getElementById('adminPassword').value;
@@ -47,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Manejar cierre de sesión
     const logoutBtn = document.getElementById('logoutBtn');
-    logoutBtn.addEventListener('click', async () => {
+    addUniqueListener(logoutBtn, 'click', async () => {
         try {
             await signOut(auth);
         } catch (error) {
@@ -60,6 +74,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configurar modales
     setupModals();
+
+    // Configurar búsquedas
+    const busquedaBarbero = document.getElementById('busquedaBarbero');
+    addUniqueListener(busquedaBarbero, 'input', (e) => {
+        loadBarberos(e.target.value);
+    });
+
+    const busquedaServicio = document.getElementById('busquedaServicio');
+    addUniqueListener(busquedaServicio, 'input', (e) => {
+        loadServicios(e.target.value);
+    });
+
+    const busquedaCita = document.getElementById('busquedaCita');
+    addUniqueListener(busquedaCita, 'input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+        loadCitas(document.getElementById('fechaFiltro').value, e.target.value);
+    });
+
+    // Configurar filtro de fechas
+    const filtrarCitas = document.getElementById('filtrarCitas');
+    addUniqueListener(filtrarCitas, 'click', () => {
+        const fecha = document.getElementById('fechaFiltro').value;
+        const cedula = busquedaCita.value;
+        loadCitas(fecha, cedula);
+    });
 });
 
 function showAdminPanel() {
@@ -73,26 +112,26 @@ function showLoginSection() {
 }
 
 async function loadInitialData() {
-    await loadCitas();
-    await loadBarberos();
-    await loadServicios();
+  const activeTab = document.querySelector('.tab-content.active').id;
+  if (activeTab === 'citasTab') await loadCitas();
+  if (activeTab === 'barberosTab') await loadBarberos();
+  if (activeTab === 'serviciosTab') await loadServicios();
 }
 
 function setupTabs() {
     const tabLinks = document.querySelectorAll('.tab-link');
     
     tabLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+        addUniqueListener(link, 'click', (e) => {
             e.preventDefault();
-            const tabId = e.target.getAttribute('data-tab');
-            
-            // Ocultar todas las pestañas
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar la pestaña seleccionada
+            const tabId = e.target.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(`${tabId}Tab`).classList.add('active');
+
+            // Cargar datos para la pestaña activa
+            if (tabId === 'barberos') loadBarberos(document.getElementById('busquedaBarbero').value);
+            if (tabId === 'servicios') loadServicios(document.getElementById('busquedaServicio').value);
+            if (tabId === 'citas') loadCitas(document.getElementById('fechaFiltro').value, document.getElementById('busquedaCita').value);
         });
     });
 }
@@ -104,17 +143,17 @@ function setupModals() {
     const barberoForm = document.getElementById('barberoForm');
     const barberoClose = barberoModal.querySelector('.close');
     
-    agregarBarberoBtn.addEventListener('click', () => {
+    addUniqueListener(agregarBarberoBtn, 'click', () => {
         document.getElementById('modalBarberoTitulo').textContent = "Agregar Barbero";
         barberoForm.reset();
         barberoModal.style.display = 'block';
     });
     
-    barberoClose.addEventListener('click', () => {
+    addUniqueListener(barberoClose, 'click', () => {
         barberoModal.style.display = 'none';
     });
     
-    barberoForm.addEventListener('submit', async (e) => {
+    addUniqueListener(barberoForm, 'submit', async (e) => {
         e.preventDefault();
         
         const barberoData = {
@@ -128,35 +167,33 @@ function setupModals() {
             const barberoId = document.getElementById('barberoId').value;
 
             if (barberoId) {
-                // Actualizar barbero existente
                 await updateDoc(doc(db, "barberos", barberoId), barberoData);
             } else {
-                // Crear nuevo barbero
                 await addDoc(collection(db, "barberos"), barberoData);
             }
 
             barberoModal.style.display = 'none';
-            await loadBarberos();
+            await loadBarberos(document.getElementById('busquedaBarbero').value);
         } catch (error) {
             console.error("Error al guardar barbero:", error);
         }
     });
-    setupHorariosSelection(); // <-- ACTIVAR la selección de horarios
+    
+    setupHorariosSelection();
 
-    // Modal de servicios (configuración similar)
-    // ...
+    // Modal de servicios
     const servicioModal = document.getElementById('servicioModal');
     const servicioForm = document.getElementById('servicioForm');
     const servicioClose = servicioModal.querySelector('.close');
 
-    document.getElementById('agregarServicioBtn').addEventListener('click', () => {
+    addUniqueListener(document.getElementById('agregarServicioBtn'), 'click', () => {
         document.getElementById('modalServicioTitulo').textContent = "Agregar Servicio";
         servicioForm.reset();
         document.getElementById('servicioId').value = "";
         servicioModal.style.display = 'block';
     });
 
-    servicioForm.addEventListener('submit', async (e) => {
+    addUniqueListener(servicioForm, 'submit', async (e) => {
         e.preventDefault();
 
         const servicioId = document.getElementById('servicioId').value;
@@ -175,96 +212,110 @@ function setupModals() {
 
         try {
             if (servicioId) {
-                // Actualizar servicio existente
                 await updateDoc(doc(db, "servicios", servicioId), servicioData);
             } else {
-                // Crear nuevo servicio
                 await addDoc(collection(db, "servicios"), servicioData);
             }
 
             servicioModal.style.display = 'none';
-            await loadServicios();
+            await loadServicios(document.getElementById('busquedaServicio').value);
         } catch (error) {
             console.error("Error al guardar servicio:", error);
             alert("Error al guardar el servicio.");
         }
     });
-
-
-
 }
 
-async function loadCitas(fecha = null) {
+async function loadCitas(fecha = null, cedulaFiltro = "") {
     const citasTable = document.getElementById('citasTable').querySelector('tbody');
-    citasTable.innerHTML = '';
+    citasTable.innerHTML = '<tr><td colspan="9">Cargando citas...</td></tr>';
     
-    let q;
-    if (fecha) {
-        q = query(collection(db, "citas"), where("fecha", "==", fecha), orderBy("hora"));
-    } else {
-        q = query(collection(db, "citas"), orderBy("fecha"), orderBy("hora"));
+    try {
+        let q;
+        if (fecha) {
+            q = query(collection(db, "citas"), 
+                where("fecha", "==", fecha), 
+                orderBy("hora"));
+        } else {
+            q = query(collection(db, "citas"), 
+                orderBy("fecha", "desc"), 
+                orderBy("hora"));
+        }
+        
+        const querySnapshot = await getDocs(q);
+        citasTable.innerHTML = '';
+        
+        if (querySnapshot.empty) {
+            citasTable.innerHTML = '<tr><td colspan="9">No se encontraron citas</td></tr>';
+            return;
+        }
+
+        const rows = [];
+        const citaActions = [];
+        
+        for (const citaDoc of querySnapshot.docs) {
+            const cita = citaDoc.data();
+            if (cedulaFiltro.trim() && !(cita.cedula || "").includes(cedulaFiltro)) {
+                continue;
+            }
+
+            const [barberoData, servicioData] = await Promise.all([
+                getDoc(doc(db, "barberos", cita.barberoId)),
+                getDoc(doc(db, "servicios", cita.servicioId))
+            ]);
+
+            const rowHTML = `
+                <tr class="fila-${cita.estado}">
+                    <td>${cita.nombre}</td>
+                    <td>${cita.cedula || '—'}</td>
+                    <td>${cita.telefono}</td>
+                    <td>${barberoData.exists() ? barberoData.data().nombre : "N/A"}</td>
+                    <td>${servicioData.exists() ? servicioData.data().nombre : "N/A"}</td>
+                    <td>${cita.fecha}</td>
+                    <td>${cita.hora}</td>
+                    <td><span class="estado ${cita.estado}">${cita.estado}</span></td>
+                    <td class="acciones-cita">
+                        <button class="btn-estado btn-confirmar" data-id="${citaDoc.id}">Confirmar</button>
+                        <button class="btn-estado btn-completar" data-id="${citaDoc.id}">Completar</button>
+                        <button class="btn-estado btn-cancelar" data-id="${citaDoc.id}">Cancelar</button>
+                    </td>
+                </tr>
+            `;
+            
+            rows.push(rowHTML);
+            citaActions.push({
+                id: citaDoc.id,
+                estado: cita.estado
+            });
+        }
+
+        citasTable.innerHTML = rows.join('');
+        setupCitaButtons(citaActions);
+        
+    } catch (error) {
+        console.error("Error al cargar citas:", error);
+        citasTable.innerHTML = '<tr><td colspan="9">Error al cargar las citas</td></tr>';
     }
-    
-    const querySnapshot = await getDocs(q);
-    
-    for (const citaDoc of querySnapshot.docs) {
-        const cita = citaDoc.data();
-        const row = citasTable.insertRow();
+}
 
-        // Obtener nombre del barbero
-        let nombreBarbero = "N/A";
-        try {
-            const barberoDoc = await getDoc(doc(db, "barberos", cita.barberoId));
-            if (barberoDoc.exists()) {
-            nombreBarbero = barberoDoc.data().nombre;
-            }
-        } catch (error) {
-            console.error("Error al obtener barbero:", error);
+function setupCitaButtons(citas) {
+    citas.forEach(cita => {
+        const confirmarBtn = document.querySelector(`.btn-confirmar[data-id="${cita.id}"]`);
+        const completarBtn = document.querySelector(`.btn-completar[data-id="${cita.id}"]`);
+        const cancelarBtn = document.querySelector(`.btn-cancelar[data-id="${cita.id}"]`);
+        
+        if (confirmarBtn) {
+            addUniqueListener(confirmarBtn, 'click', () => updateCitaEstado(cita.id, 'confirmada'));
         }
-
-        // Obtener nombre del servicio
-        let nombreServicio = "N/A";
-        try {
-            const servicioDoc = await getDoc(doc(db, "servicios", cita.servicioId));
-            if (servicioDoc.exists()) {
-            nombreServicio = servicioDoc.data().nombre;
-            }
-        } catch (error) {
-            console.error("Error al obtener servicio:", error);
+        
+        if (completarBtn) {
+            addUniqueListener(completarBtn, 'click', () => updateCitaEstado(cita.id, 'completada'));
         }
-
-        row.innerHTML = `
-            <td>${cita.nombre}</td>
-            <td>${cita.cedula || '—'}</td>
-            <td>${cita.telefono}</td>
-            <td>${nombreBarbero}</td>
-            <td>${nombreServicio}</td>
-            <td>${cita.fecha}</td>
-            <td>${cita.hora}</td>
-            <td><span class="estado ${cita.estado}">${cita.estado}</span></td>
-            <td class="acciones-cita">
-            <button class="btn-estado btn-confirmar" data-id="${citaDoc.id}">Confirmar</button>
-            <button class="btn-estado btn-completar" data-id="${citaDoc.id}">Completar</button>
-            <button class="btn-estado btn-cancelar" data-id="${citaDoc.id}">Cancelar</button>
-            </td>
-        `;
-
-        // Colorea la fila según el estado
-        row.classList.add(`fila-${cita.estado}`);
-     }
-
-    
-    document.querySelectorAll('.btn-completar').forEach(btn => {
-    btn.addEventListener('click', () => updateCitaEstado(btn.dataset.id, 'completada'));
+        
+        if (cancelarBtn) {
+            addUniqueListener(cancelarBtn, 'click', () => updateCitaEstado(cita.id, 'cancelada'));
+        }
     });
-    document.querySelectorAll('.btn-confirmar').forEach(btn => {
-    btn.addEventListener('click', () => updateCitaEstado(btn.dataset.id, 'confirmada'));
-    });
-    document.querySelectorAll('.btn-cancelar').forEach(btn => {
-    btn.addEventListener('click', () => updateCitaEstado(btn.dataset.id, 'cancelada'));
-    });
-
-
 }
 
 async function updateCitaEstado(citaId, estado) {
@@ -276,15 +327,12 @@ async function updateCitaEstado(citaId, estado) {
 
     const cita = citaDoc.data();
 
-    // Si se cancela una cita, elimina la hora ocupada
     if (estado === "cancelada") {
       const barberoRef = doc(db, "barberos", cita.barberoId);
       const barberoDoc = await getDoc(barberoRef);
 
       if (barberoDoc.exists()) {
         const horarios = barberoDoc.data().horario || [];
-
-        // Agrega el horario de vuelta solo si no estaba
         if (!horarios.includes(cita.hora)) {
           horarios.push(cita.hora);
           await updateDoc(barberoRef, { horario: horarios });
@@ -293,164 +341,221 @@ async function updateCitaEstado(citaId, estado) {
     }
 
     await updateDoc(citaRef, { estado });
-    await loadCitas();
+    
+    // Recargar citas manteniendo filtros
+    const fecha = document.getElementById('fechaFiltro').value;
+    const cedula = document.getElementById('busquedaCita').value;
+    await loadCitas(fecha, cedula);
+    
   } catch (error) {
     console.error("Error al actualizar cita:", error);
   }
 }
 
-
-
-async function loadBarberos() {
+async function loadBarberos(filtro = "") {
     const barberosTable = document.getElementById('barberosTable').querySelector('tbody');
-    barberosTable.innerHTML = '';
+    barberosTable.innerHTML = '<tr><td colspan="4">Cargando barberos...</td></tr>';
+    
+    try {
+        const querySnapshot = await getDocs(collection(db, "barberos"));
+        barberosTable.innerHTML = '';
+        
+        if (querySnapshot.empty) {
+            barberosTable.innerHTML = '<tr><td colspan="4">No se encontraron barberos</td></tr>';
+            return;
+        }
 
-    const querySnapshot = await getDocs(collection(db, "barberos"));
-
-    querySnapshot.forEach((docSnap) => {
-        const barbero = docSnap.data();
-        const row = barberosTable.insertRow();
-
-        row.innerHTML = `
-            <td>${barbero.nombre}</td>
-            <td>${barbero.especialidad || 'N/A'}</td>
-            <td>${Array.isArray(barbero.horario) ? barbero.horario.join(', ') : 'N/A'}</td>
-            <td>
-                <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
-                <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
-            </td>
-        `;
-
-        // === Agregar el evento de "Editar" ===
-        row.querySelector('.btn-editar').addEventListener('click', async () => {
-            try {
-                const docRef = doc(db, "barberos", docSnap.id);
-                const barberoDoc = await getDoc(docRef);
-
-                if (barberoDoc.exists()) {
-                    const barberoData = barberoDoc.data();
-
-                    document.getElementById('modalBarberoTitulo').textContent = "Editar Barbero";
-                    document.getElementById('barberoId').value = docSnap.id;
-                    document.getElementById('barberoNombre').value = barberoData.nombre || '';
-                    document.getElementById('barberoEspecialidad').value = barberoData.especialidad || '';
-
-                    // Cargar horarios
-                    window.cargarHorariosBarbero(Array.isArray(barberoData.horario) ? barberoData.horario : []);
-
-                    // Mostrar modal
-                    document.getElementById('barberoModal').style.display = 'block';
-                }
-            } catch (error) {
-                console.error("Error al cargar barbero:", error);
+        const rows = [];
+        const barberoActions = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            const barbero = docSnap.data();
+            if (filtro.trim() && !(barbero.nombre || "").toLowerCase().includes(filtro.toLowerCase())) {
+                return;
             }
+            
+            const rowHTML = `
+                <tr>
+                    <td>${barbero.nombre}</td>
+                    <td>${barbero.especialidad || 'N/A'}</td>
+                    <td>${Array.isArray(barbero.horario) ? barbero.horario.join(', ') : 'N/A'}</td>
+                    <td>
+                        <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
+                        <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            
+            rows.push(rowHTML);
+            barberoActions.push({
+                id: docSnap.id,
+                nombre: barbero.nombre
+            });
         });
 
-        // === Agregar el evento de "Eliminar" ===
-        row.querySelector('.btn-eliminar').addEventListener('click', async () => {
-            const confirmacion = confirm("¿Estás seguro de que deseas eliminar este barbero? Esta acción no se puede deshacer.");
+        barberosTable.innerHTML = rows.join('');
+        setupBarberoButtons(barberoActions);
+        
+    } catch (error) {
+        console.error("Error al cargar barberos:", error);
+        barberosTable.innerHTML = '<tr><td colspan="4">Error al cargar barberos</td></tr>';
+    }
+}
 
-            if (confirmacion) {
+function setupBarberoButtons(barberos) {
+    barberos.forEach(barbero => {
+        const editarBtn = document.querySelector(`.btn-editar[data-id="${barbero.id}"]`);
+        const eliminarBtn = document.querySelector(`.btn-eliminar[data-id="${barbero.id}"]`);
+        
+        if (editarBtn) {
+            addUniqueListener(editarBtn, 'click', async () => {
                 try {
-                    await deleteDoc(doc(db, "barberos", docSnap.id));
-                    alert("Barbero eliminado correctamente.");
-                    await loadBarberos();
+                    const docRef = doc(db, "barberos", barbero.id);
+                    const barberoDoc = await getDoc(docRef);
+
+                    if (barberoDoc.exists()) {
+                        const barberoData = barberoDoc.data();
+                        document.getElementById('modalBarberoTitulo').textContent = "Editar Barbero";
+                        document.getElementById('barberoId').value = barbero.id;
+                        document.getElementById('barberoNombre').value = barberoData.nombre || '';
+                        document.getElementById('barberoEspecialidad').value = barberoData.especialidad || '';
+                        window.cargarHorariosBarbero(Array.isArray(barberoData.horario) ? barberoData.horario : []);
+                        document.getElementById('barberoModal').style.display = 'block';
+                    }
                 } catch (error) {
-                    console.error("Error al eliminar barbero:", error);
-                    alert("Ocurrió un error al eliminar el barbero.");
+                    console.error("Error al cargar barbero:", error);
                 }
-            }
-        });
+            });
+        }
+        
+        if (eliminarBtn) {
+            addUniqueListener(eliminarBtn, 'click', async () => {
+                const confirmacion = confirm(`¿Estás seguro de eliminar a ${barbero.nombre}?`);
+                if (confirmacion) {
+                    try {
+                        await deleteDoc(doc(db, "barberos", barbero.id));
+                        await loadBarberos(document.getElementById('busquedaBarbero').value);
+                    } catch (error) {
+                        console.error("Error al eliminar barbero:", error);
+                    }
+                }
+            });
+        }
     });
 }
 
-
-async function loadServicios() {
+async function loadServicios(filtro = "") {
     const serviciosTable = document.getElementById('serviciosTable').querySelector('tbody');
-    serviciosTable.innerHTML = '';
+    serviciosTable.innerHTML = '<tr><td colspan="5">Cargando servicios...</td></tr>';
     
-    const querySnapshot = await getDocs(collection(db, "servicios"));
-    
-    querySnapshot.forEach((docSnap) => {
-        const servicio = docSnap.data();
-        const row = serviciosTable.insertRow();
+    try {
+        const querySnapshot = await getDocs(collection(db, "servicios"));
+        serviciosTable.innerHTML = '';
+        
+        if (querySnapshot.empty) {
+            serviciosTable.innerHTML = '<tr><td colspan="5">No se encontraron servicios</td></tr>';
+            return;
+        }
 
-        row.innerHTML = `
-            <td>${servicio.nombre}</td>
-            <td>${servicio.descripcion || 'N/A'}</td>
-            <td>$${servicio.precio}</td>
-            <td>${servicio.duracion} min</td>
-            <td>
-            <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
-            <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
-            </td>
-        `;
-
-        // 👉 Evento editar
-        row.querySelector('.btn-editar').addEventListener('click', async () => {
-            try {
-            const docRef = doc(db, "servicios", docSnap.id);
-            const servicioDoc = await getDoc(docRef);
-
-            if (servicioDoc.exists()) {
-                const data = servicioDoc.data();
-
-                document.getElementById('modalServicioTitulo').textContent = "Editar Servicio";
-                document.getElementById('servicioId').value = docSnap.id;
-                document.getElementById('servicioNombre').value = data.nombre || '';
-                document.getElementById('servicioDescripcion').value = data.descripcion || '';
-                document.getElementById('servicioPrecio').value = data.precio || '';
-                document.getElementById('servicioDuracion').value = data.duracion || '';
-
-                document.getElementById('servicioModal').style.display = 'block';
+        const rows = [];
+        const servicioActions = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            const servicio = docSnap.data();
+            if (filtro.trim() && !(servicio.nombre || '').toLowerCase().includes(filtro.toLowerCase())) {
+                return;
             }
-            } catch (error) {
-            console.error("Error al cargar servicio:", error);
-            }
+
+            const rowHTML = `
+                <tr>
+                    <td>${servicio.nombre}</td>
+                    <td>${servicio.descripcion || 'N/A'}</td>
+                    <td>$${servicio.precio}</td>
+                    <td>${servicio.duracion} min</td>
+                    <td>
+                        <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
+                        <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            
+            rows.push(rowHTML);
+            servicioActions.push({
+                id: docSnap.id,
+                nombre: servicio.nombre
+            });
         });
 
-        // 👉 Evento eliminar
-        row.querySelector('.btn-eliminar').addEventListener('click', async () => {
-            const confirmar = confirm("¿Seguro que deseas eliminar este servicio?");
-            if (confirmar) {
-            try {
-                await deleteDoc(doc(db, "servicios", docSnap.id));
-                await loadServicios();
-            } catch (error) {
-                console.error("Error al eliminar servicio:", error);
-            }
-            }
-        });
+        serviciosTable.innerHTML = rows.join('');
+        setupServicioButtons(servicioActions);
+        
+    } catch (error) {
+        console.error("Error al cargar servicios:", error);
+        serviciosTable.innerHTML = '<tr><td colspan="5">Error al cargar servicios</td></tr>';
+    }
+}
+
+function setupServicioButtons(servicios) {
+    servicios.forEach(servicio => {
+        const editarBtn = document.querySelector(`.btn-editar[data-id="${servicio.id}"]`);
+        const eliminarBtn = document.querySelector(`.btn-eliminar[data-id="${servicio.id}"]`);
+        
+        if (editarBtn) {
+            addUniqueListener(editarBtn, 'click', async () => {
+                try {
+                    const docRef = doc(db, "servicios", servicio.id);
+                    const servicioDoc = await getDoc(docRef);
+
+                    if (servicioDoc.exists()) {
+                        const data = servicioDoc.data();
+                        document.getElementById('modalServicioTitulo').textContent = "Editar Servicio";
+                        document.getElementById('servicioId').value = servicio.id;
+                        document.getElementById('servicioNombre').value = data.nombre || '';
+                        document.getElementById('servicioDescripcion').value = data.descripcion || '';
+                        document.getElementById('servicioPrecio').value = data.precio || '';
+                        document.getElementById('servicioDuracion').value = data.duracion || '';
+                        document.getElementById('servicioModal').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Error al cargar servicio:", error);
+                }
+            });
+        }
+        
+        if (eliminarBtn) {
+            addUniqueListener(eliminarBtn, 'click', async () => {
+                const confirmar = confirm(`¿Seguro que deseas eliminar el servicio: ${servicio.nombre}?`);
+                if (confirmar) {
+                    try {
+                        await deleteDoc(doc(db, "servicios", servicio.id));
+                        await loadServicios(document.getElementById('busquedaServicio').value);
+                    } catch (error) {
+                        console.error("Error al eliminar servicio:", error);
+                    }
+                }
+            });
+        }
     });
-
-    
-    // Configurar botones de editar/eliminar
-    // ...
 }
 
 function setupHorariosSelection() {
     let horariosSeleccionados = [];
-
-    // Referencia al input oculto
     const inputHorarios = document.getElementById('barberoHorarios');
 
-    // Inicializar eventos para cada botón de horario
     document.querySelectorAll('.hora-btn').forEach(btn => {
         const hora = btn.getAttribute('data-hora');
 
-        // Hover: mostrar rojo si ya está seleccionado
-        btn.addEventListener('mouseenter', () => {
+        addUniqueListener(btn, 'mouseenter', () => {
             if (btn.classList.contains('seleccionado')) {
-                btn.classList.add('por-remover'); // Se verá rojo
+                btn.classList.add('por-remover');
             }
         });
 
-        btn.addEventListener('mouseleave', () => {
+        addUniqueListener(btn, 'mouseleave', () => {
             btn.classList.remove('por-remover');
         });
 
-        // Clic: alternar selección
-        btn.addEventListener('click', () => {
+        addUniqueListener(btn, 'click', () => {
             if (btn.classList.contains('seleccionado')) {
                 btn.classList.remove('seleccionado');
                 horariosSeleccionados = horariosSeleccionados.filter(h => h !== hora);
@@ -463,7 +568,6 @@ function setupHorariosSelection() {
         });
     });
 
-    // Función pública para cargar horarios desde la base de datos (editar barbero)
     window.cargarHorariosBarbero = function(horarios) {
         horariosSeleccionados = horarios || [];
         inputHorarios.value = JSON.stringify(horariosSeleccionados);

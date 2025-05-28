@@ -47,6 +47,8 @@
                         <label for="fechaFiltro">Filtrar por fecha:</label>
                         <input type="date" id="fechaFiltro">
                         <button id="filtrarCitas">Filtrar</button>
+                        <label for="fechaFiltro">Filtrar por cedula:</label>
+                        <input type="text" id="busquedaCita" placeholder="Buscar cita por cédula..." class="barra-busqueda" inputmode="numeric" pattern="\d*">
                     </div>
                     <table id="citasTable">
                         <thead>
@@ -72,6 +74,7 @@
                 <div id="barberosTab" class="tab-content">
                     <h2>Barberos</h2>
                     <button id="agregarBarberoBtn">Agregar Barbero</button>
+                    <input type="text" id="busquedaBarbero" placeholder="Buscar barbero por nombre..." class="barra-busqueda">
                     <table id="barberosTable">
                         <thead>
                             <tr>
@@ -91,6 +94,7 @@
                 <div id="serviciosTab" class="tab-content">
                     <h2>Servicios</h2>
                     <button id="agregarServicioBtn">Agregar Servicio</button>
+                    <input type="text" id="busquedaServicio" placeholder="Buscar servicio por nombre..." class="barra-busqueda">
                     <table id="serviciosTable">
                         <thead>
                             <tr>
@@ -157,11 +161,12 @@
                 </div>
                 <div class="form-group">
                     <label for="servicioDescripcion">Descripción:</label>
-                    <textarea id="servicioDescripcion"></textarea>
+                    <textarea id="servicioDescripcion" maxlength="58"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="servicioPrecio">Precio:</label>
-                    <input type="number" id="servicioPrecio" step="0.01" required>
+                    <input type="number" id="servicioPrecio" step="0.01" min="0" required>
+
                 </div>
                 <div class="form-group">
                     <label for="servicioDuracion">Duración (minutos):</label>
@@ -174,5 +179,48 @@
     
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/admin.js"></script>
+<script>
+    // Función genérica para limpiar formularios
+    function limpiarFormulario(formularioId) {
+        const formulario = document.getElementById(formularioId);
+        if (formulario) {
+            formulario.reset();
+        }
+    }
+
+    // También limpia horarios seleccionados del barbero
+    function limpiarFormularioBarbero() {
+        limpiarFormulario('barberoForm');
+        document.getElementById('barberoId').value = '';
+        document.querySelectorAll('.hora-btn').forEach(btn => {
+            btn.classList.remove('seleccionado');  // si usas clases para selección visual
+        });
+        document.getElementById('barberoHorarios').value = '';
+    }
+
+    // Eventos para cerrar y limpiar modales
+    document.querySelectorAll('#barberoModal .close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            limpiarFormularioBarbero();
+            document.getElementById('barberoModal').style.display = 'none';
+        });
+    });
+
+    document.querySelectorAll('#servicioModal .close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            limpiarFormulario('servicioForm');
+            document.getElementById('servicioModal').style.display = 'none';
+        });
+    });
+
+    // Convierte entradas de texto en mayúsculas automáticamente
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', () => {
+            elemento.value = elemento.value.toUpperCase();
+        });
+        });
+    });
+</script>
 </body>
 </html>
