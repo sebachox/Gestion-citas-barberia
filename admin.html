@@ -179,6 +179,66 @@
     
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/admin.js"></script>
+
+<!-- Agregar esto antes del cierre del body (antes de los scripts) -->
+<footer class="about-footer">
+    <div class="about-container">
+        <h3>Equipo de Desarrollo</h3>
+        <p>Estudiantes de Ingeniería de Sistemas</p>
+        <ul class="team-list">
+            <li>Sebastián Ordoñez - <a href="mailto:sebastiandavidordbol@gmail.com">sebastiandavidordbol@gmail.com</a></li>
+            <li>Andrés Trujillo - <a href="mailto:andrestrujillovillota@gmail.com">andrestrujillovillota@gmail.com</a></li>
+            <li>Víctor Erazo - <a href="mailto:victorerazoburbano@gmail.com">victorerazoburbano@gmail.com</a></li>
+            <li>Dario Narvaez - <a href="mailto:darionarvaez66@gmail.com">darionarvaez66@gmail.com</a></li>
+        </ul>
+    </div>
+</footer>
+
+<style>
+    .about-footer {
+        margin-top: 40px;
+        padding: 20px;
+        background-color: #222;
+        color: #fff;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .about-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .about-footer h3 {
+        color: #FFD700;
+        margin-bottom: 10px;
+    }
+    
+    .team-list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .team-list li {
+        background: #333;
+        padding: 10px 15px;
+        border-radius: 5px;
+        min-width: 250px;
+    }
+    
+    .team-list a {
+        color: #FFD700;
+        text-decoration: none;
+    }
+    
+    .team-list a:hover {
+        text-decoration: underline;
+    }
+</style>
 <script>
     // Función genérica para limpiar formularios
     function limpiarFormulario(formularioId) {
